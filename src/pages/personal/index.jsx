@@ -49,11 +49,30 @@ const PersonalAI = () => {
   const [Up, setUp] = useState("");
   const [searchValue, setSearchValue] = useState();
   const [selectedItem, setSelectedItem] = useState();
+  const [gpxfile, setGpxfile] = useState(null);
+  const [gpxImgurl, setgpxImgurl] = useState(null);
 
-  const uploadAction = (file) => {
-    debugger;
-    setSearchValue(file.name);
-    setUp(file.name);
+  const uploadAction = (event) => {
+    setSearchValue(event.target.files[0].name);
+    setUp(event.target.files[0].name);
+    setGpxfile(event.target.files[0]);
+  };
+
+  const handleFileUpload = () => {
+    if (gpxfile) {
+      const formData = new FormData();
+      formData.append("file", gpxfile);
+      axios
+        .post("http://localhost:5000/api/upload", formData)
+        .then((res) => {
+          console.log(res.data.data);
+          setgpxImgurl(res.data.data);
+          setUploadOpen(false);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
   };
 
   const handleClickOpen = () => {
@@ -74,6 +93,34 @@ const PersonalAI = () => {
   const setValue = (e) => {
     setChat({ ...chat, location: e.target.value });
   };
+  const onDelete = (id) => {
+    console.log(id);
+    const formData = new FormData();
+    formData.append("id", id);
+    axios
+      .post("http://localhost:5000/api/deletechat", formData)
+      .then((res) => {
+        console.log(res);
+        getChatBot();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+  const onEdit = (id) => {
+    console.log(id);
+    const formData = new FormData();
+    formData.append("id", id);
+    axios
+      .post("http://localhost:5000/api/editchat", formData)
+      .then((res) => {
+        console.log(res);
+        // getchat();
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
   const addChat = () => {
     let formData = new FormData();
     formData.append("data", JSON.stringify(chat));
@@ -84,6 +131,12 @@ const PersonalAI = () => {
           notification("error", res.data.message);
         } else {
           notification("success", res.data.message);
+          setChat({
+            level: "",
+            age: "",
+            gender: "",
+            location: "",
+          });
           getChatBot();
         }
         setOpen(false);
@@ -96,11 +149,8 @@ const PersonalAI = () => {
   useEffect(() => {
     getChatBot();
   }, []);
+  useEffect(() => {}, [chathistory]);
   useEffect(() => {
-    console.log(chathistory);
-  }, [chathistory]);
-  useEffect(() => {
-    console.log("Flag:", flag);
     if (flag == true) {
       axios
         .post("http://localhost:5000/api/getchat", chatbotID)
@@ -111,7 +161,6 @@ const PersonalAI = () => {
               .post("http://localhost:5000/api/createmessage", res.data.data)
               .then((res1) => {
                 if (res1.status === 200) {
-                  console.log(res1.data.data);
                   setchatbot(dispatch, res1.data.data);
                   setFlag(false);
                   axios
@@ -187,7 +236,6 @@ const PersonalAI = () => {
         } else {
           receiveMessage(res.data.data);
         }
-        alert("Success");
       });
   };
   const receiveMessage = (message) => {
@@ -262,13 +310,19 @@ const PersonalAI = () => {
                       </p>
                     </div>
                     <div className="flex items-start gap-2.5">
-                      <Button className="!p-0 !min-w-0 w-5 h-5 !text-black">
+                      <Button
+                        className="!p-0 !min-w-0 w-5 h-5 !text-black"
+                        onClick={() => onEdit(data["id"])}
+                      >
                         <img className="w-full h-full" src={editImg}></img>
                       </Button>
                       <Button className="!p-0 !min-w-0 w-5 h-5 !text-black">
                         <BsBookmark className="w-full h-full" />
                       </Button>
-                      <Button className="!p-0 !min-w-0 w-5 h-5 !text-black">
+                      <Button
+                        className="!p-0 !min-w-0 w-5 h-5 !text-black"
+                        onClick={() => onDelete(data["id"])}
+                      >
                         <BsTrash3 className="w-full h-full" />
                       </Button>
                     </div>
@@ -289,10 +343,7 @@ const PersonalAI = () => {
         </div>
         <div className="flex flex-1 flex-col justify-between items-start self-stretch bg-white w-full">
           <div className=" flex p-2.5 flex-col items-start gap-6 self-stretch">
-            {console.log(chathistory, "ddddddd")}
             {chathistory.map((data, index) => {
-              console.log(index);
-
               if (data.role == "ai") {
                 return (
                   <div key={index} className="bg-sky-500">
@@ -590,37 +641,36 @@ const PersonalAI = () => {
                   style={{ display: "none" }}
                   id="file_input"
                   aria-describedby="file_input_help"
-                  onChange={(e) => {
-                    uploadAction(e.target.files[0]);
-                  }}
+                  onChange={uploadAction}
                 />
               </label>
             </div>
-            <div className="p-3 rounded-full border-[0.5px] border-solid border-[#8E8E8E] flex justify-between	items-center py-10 px-4 gap-2">
-              <div className="grid grid-rows-3"></div>
-              <div className="ml-[-10px]">
-                <CheckIcon />
+            {Up ? (
+              <div className="p-3 rounded-full border-[0.5px] border-solid border-[#8E8E8E] flex justify-between	items-center py-10 px-4 gap-2">
+                <div className="grid grid-rows-3"></div>
+                <div className="ml-[-10px]">
+                  <CheckIcon />
+                </div>
+                <div>
+                  <input type="button" value={Up} />
+                </div>
+                <div className="mr-[-10px]">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-6 h-6"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <img />
               </div>
-              {"Hello.rara"}
-              <div>
-                <input type="button" value={Up} />
-              </div>
-              <div className="mr-[-10px]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  class="w-6 h-6"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </div>
-              <img />
-            </div>
+            ) : null}
           </div>
         </div>
         <div className="p-5 w-full">
@@ -633,19 +683,24 @@ const PersonalAI = () => {
                 ? " !bg-black !text-white"
                 : " !bg-[#8E8E8E] !text-[#D9D9D9]"
             }`}
-            disabled={
-              chat.level !== "" &&
-              chat.age !== "" &&
-              chat.gender !== "" &&
-              chat.location !== ""
-                ? false
-                : true
-            }
+            // disabled={
+            //   chat.level !== "" &&
+            //   chat.age !== "" &&
+            //   chat.gender !== "" &&
+            //   chat.location !== ""
+            //     ? false
+            //     : true
+            // }
+            // onClick={() =>
+            //   console.log(chat.level, chat.age, chat.gender, chat.location)
+            // }
+            onClick={handleFileUpload}
           >
             Submit
           </Button>
         </div>
       </SModal>
+      <img src={gpxImgurl} />
     </div>
   );
 };
