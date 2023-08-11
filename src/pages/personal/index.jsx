@@ -18,6 +18,8 @@ import { GoSearch } from "react-icons/go";
 import { VscSend } from "react-icons/vsc";
 import SModal from "../../components/modals";
 import { CheckIcon } from "../../components/icons";
+import { data } from "autoprefixer";
+import { blue, red } from "@mui/material/colors";
 
 const PersonalAI = () => {
   const dispatch = useDispatch();
@@ -46,6 +48,7 @@ const PersonalAI = () => {
   const [fileData, setFiledata] = useState([]);
   const [Up, setUp] = useState("");
   const [searchValue, setSearchValue] = useState();
+  const [selectedItem, setSelectedItem] = useState();
 
   const uploadAction = (file) => {
     debugger;
@@ -94,6 +97,9 @@ const PersonalAI = () => {
     getChatBot();
   }, []);
   useEffect(() => {
+    console.log(chathistory);
+  }, [chathistory]);
+  useEffect(() => {
     console.log("Flag:", flag);
     if (flag == true) {
       axios
@@ -108,6 +114,25 @@ const PersonalAI = () => {
                   console.log(res1.data.data);
                   setchatbot(dispatch, res1.data.data);
                   setFlag(false);
+                  axios
+                    .post(
+                      "http://localhost:5000/api/getmessages",
+                      res.data.data
+                    )
+                    .then((res2) => {
+                      let temps = res2.data.data;
+                      let chathistoryTemp = [];
+                      for (let temp in temps) {
+                        let messageTemps = temps[temp];
+                        for (let messageTemp in messageTemps) {
+                          let lastTemps = messageTemps[messageTemp];
+                          for (let lastTemp in lastTemps) {
+                            chathistoryTemp.push(lastTemps[lastTemp]);
+                          }
+                        }
+                      }
+                      setChathistory(chathistoryTemp);
+                    });
                 }
               })
               .catch((err) => console.log(err));
@@ -126,6 +151,7 @@ const PersonalAI = () => {
   const getCurrentChat = (data) => {
     setFlag(true);
     getchat(dispatch, data);
+    setSelectedItem(data["uuid"]);
     //
   };
 
@@ -219,7 +245,13 @@ const PersonalAI = () => {
                   className=" felx felx-col items-start self-stretch"
                   key={data["uuid"]}
                 >
-                  <div className=" cursor-pointer flex p-4 justify-between items-start self-stretch rounded-[5px] bg-[#e5e5e5]">
+                  <div
+                    className={`cursor-pointer flex p-4 justify-between items-start self-stretch rounded-5 ${
+                      data["uuid"] === selectedItem
+                        ? "bg-[#d5d5d5]"
+                        : "bg-[#efefef]"
+                    }`}
+                  >
                     <div
                       className="flex items-start gap-2.5"
                       onClick={() => getCurrentChat(data)}
@@ -257,7 +289,24 @@ const PersonalAI = () => {
         </div>
         <div className="flex flex-1 flex-col justify-between items-start self-stretch bg-white w-full">
           <div className=" flex p-2.5 flex-col items-start gap-6 self-stretch">
-            Hello
+            {console.log(chathistory, "ddddddd")}
+            {chathistory.map((data, index) => {
+              console.log(index);
+
+              if (data.role == "ai") {
+                return (
+                  <div key={index} className="bg-sky-500">
+                    {data.content}
+                  </div>
+                );
+              } else {
+                return (
+                  <div key={index} className="bg-slate-500">
+                    {data.content}
+                  </div>
+                );
+              }
+            })}
           </div>
           <div className=" flex p-5 items-center gap-4 self-stretch w-full">
             <div className="flex items-center gap-3">
