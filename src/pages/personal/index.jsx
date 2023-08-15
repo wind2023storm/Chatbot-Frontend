@@ -3,7 +3,14 @@ import AOS from "aos";
 import axios from "axios";
 import toast, { Toaster } from "react-hot-toast";
 import { useSelector, useDispatch } from "react-redux";
-import { getchat, setchatbot } from "../../redux/actions/chatAction";
+import {
+  getchat,
+  getchatbot,
+  setchatbot,
+} from "../../redux/actions/chatAction";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { tomorrow } from "react-syntax-highlighter/dist/cjs/styles/prism";
+import Markdown from "react-markdown";
 
 import calImg from "../../assets/images/calImg.svg";
 import prevArrow from "../../assets/images/prevArrow.svg";
@@ -11,7 +18,13 @@ import nextArrow from "../../assets/images/nextArrow.svg";
 import calImg_1 from "../../assets/images/calImg_1.svg";
 import editImg from "../../assets/images/editImg.svg";
 import { Button } from "@mui/material";
-import { BsPlus, BsChatLeft, BsBookmark, BsTrash3 } from "react-icons/bs";
+import {
+  BsPlus,
+  BsChatLeft,
+  BsBookmark,
+  BsTrash3,
+  BsMarkdown,
+} from "react-icons/bs";
 import { FiSettings, FiUpload } from "react-icons/fi";
 import { RiSendPlaneLine } from "react-icons/ri";
 import { GoSearch } from "react-icons/go";
@@ -19,7 +32,6 @@ import { VscSend } from "react-icons/vsc";
 import SModal from "../../components/modals";
 import { CheckIcon } from "../../components/icons";
 import { data } from "autoprefixer";
-import { blue, red } from "@mui/material/colors";
 
 const PersonalAI = () => {
   const dispatch = useDispatch();
@@ -30,7 +42,7 @@ const PersonalAI = () => {
       toast.success(message);
     }
   };
-
+  const [uploadS, setUploadS] = useState(false);
   const [open, setOpen] = useState(false);
   const [flag, setFlag] = useState(false);
   const [openUpload, setUploadOpen] = useState(false);
@@ -51,6 +63,7 @@ const PersonalAI = () => {
   const [selectedItem, setSelectedItem] = useState();
   const [gpxfile, setGpxfile] = useState(null);
   const [gpxImgurl, setgpxImgurl] = useState(null);
+  const [selectFlag, setselectFlag] = useState(false);
 
   const uploadAction = (event) => {
     setSearchValue(event.target.files[0].name);
@@ -66,7 +79,7 @@ const PersonalAI = () => {
         .post("http://localhost:5000/api/upload", formData)
         .then((res) => {
           console.log(res.data.data);
-          setgpxImgurl(res.data.data);
+          setgpxImgurl("http://localhost:5000/static/" + res.data.data);
           setUploadOpen(false);
         })
         .catch((err) => {
@@ -102,6 +115,7 @@ const PersonalAI = () => {
       .then((res) => {
         console.log(res);
         getChatBot();
+        window.location.reload();
       })
       .catch((err) => {
         console.log(err);
@@ -149,7 +163,22 @@ const PersonalAI = () => {
   useEffect(() => {
     getChatBot();
   }, []);
-  useEffect(() => {}, [chathistory]);
+  useEffect(() => {
+    if (chathistory.length == 2) {
+      const formData = new FormData();
+      formData.append("chat_name", chathistory[1].content);
+      formData.append("uuid", selectedItem);
+      console.log(selectedItem);
+      axios
+        .post("http://localhost:5000/api/editchat", formData)
+        .then((res) => {
+          getchatbot();
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+    }
+  }, [chathistory]);
   useEffect(() => {
     if (flag == true) {
       axios
@@ -200,7 +229,8 @@ const PersonalAI = () => {
   const getCurrentChat = (data) => {
     setFlag(true);
     getchat(dispatch, data);
-    setSelectedItem(data["uuid"]);
+    setSelectedItem(data["uuid"]); //current seleted chatbot
+    setselectFlag(true);
     //
   };
 
@@ -281,7 +311,7 @@ const PersonalAI = () => {
           </Button>
         </div>
       </div>
-      <div className=" flex flex-1 w-full items-start shrink-0 self-stretch rounded-[7px] shadow-white/75 shadow-xl bg-white">
+      <div className=" flex flex-1 w-full items-start shrink-0 self-stretch rounded-[7px] shadow-white/75 shadow-xl bg-white overflow-auto">
         <div className="flex w-[293px] px-4 py-5 flex-col justify-between items-start self-stretch border-r-[#8E8E8E] border-r-solid border-r-[0.5px]">
           <div className=" flex flex-col items-start gap-5 self-stretch">
             <p className="text-black font-[Inter] text-lg font-semibold leading-normal">
@@ -342,24 +372,91 @@ const PersonalAI = () => {
           </Button>
         </div>
         <div className="flex flex-1 flex-col justify-between items-start self-stretch bg-white w-full">
-          <div className=" flex p-2.5 flex-col items-start gap-6 self-stretch">
+          <div className="flex pt-[23px] flex-col justify-start items-start gap-10 flex-1 self-stretch p-2.5 overflow-x-auto">
+            <img src={gpxImgurl} className="w-1/4" />
             {chathistory.map((data, index) => {
               if (data.role == "ai") {
                 return (
-                  <div key={index} className="bg-sky-500">
-                    {data.content}
+                  <div
+                    key={index}
+                    className="flex p-25px items-start gap-20 self-stretch rounded-md	bg-[#F5F5F5]"
+                  >
+                    <div className="flex p-[25px] items-start gap-20 self-stretch">
+                      <img src="/src/assets/images/Ellipse_3.svg"></img>
+
+                      <div className="flex flex-col items-start gap-5 flex-1">
+                        <div className="flex-1 text-black-900 font-sans text-sm font-normal leading-6 w-full">
+                          <Markdown
+                            components={{
+                              code({
+                                node,
+                                inline,
+                                className,
+                                children,
+                                ...props
+                              }) {
+                                const match = /language-(\w+)/.exec(
+                                  className || ""
+                                );
+
+                                return !inline && match ? (
+                                  <SyntaxHighlighter
+                                    style={materialLight}
+                                    PreTag="div"
+                                    language={match[1]}
+                                    children={String(children).replace(
+                                      /\n$/,
+                                      ""
+                                    )}
+                                    {...props}
+                                  />
+                                ) : (
+                                  <code
+                                    className={className ? className : ""}
+                                    {...props}
+                                  >
+                                    {children}
+                                  </code>
+                                );
+                              },
+                            }}
+                          >
+                            {data.content}
+                          </Markdown>
+                        </div>
+                        <div className="flex gap-5 w-10 h-10 border-red-100"></div>
+                        <div className="flex gird grid-flow-row items-start gap-[13.913px]"></div>
+                      </div>
+                    </div>
                   </div>
                 );
               } else {
                 return (
-                  <div key={index} className="bg-slate-500">
-                    {data.content}
+                  <div
+                    key={index}
+                    className="flex items-start gap-20 self-stretch rounded-md	bg-[#FFF] pl-[35px] pr-[35px]"
+                  >
+                    <div className="flex items-start gap-6 self-stretch">
+                      <img src="/src/assets/images/Ellipse_4.svg"></img>
+
+                      <div className="flex flex-col items-start gap-5 flex-1">
+                        <div className="flex-1 text-black-900 font-sans text-sm font-normal leading-6 w-full">
+                          {data.content}
+                        </div>
+                        <div className="flex gap-5 w-10 h-10 border-red-100"></div>
+                        <div className="flex gird grid-flow-row items-start gap-[13.913px]"></div>
+                      </div>
+                    </div>
                   </div>
                 );
               }
             })}
           </div>
-          <div className=" flex p-5 items-center gap-4 self-stretch w-full">
+          <div
+            className={`flex p-5 items-center gap-4 self-stretch w-full ${
+              selectFlag == false ? "pointer-events-none" : ""
+            }`}
+          >
             <div className="flex items-center gap-3">
               <Button className=" !min-w-0 flex !p-2 !justify-center !items-center !gap-2.5 !rounded-full !border-[0.5px] !border-solid !border-[#8E8E8E] !text-[#8E8E8E]">
                 <FiSettings className=" w-6 h-6" />
@@ -371,7 +468,7 @@ const PersonalAI = () => {
                 <FiUpload className=" w-6 h-6" />
               </Button>
             </div>
-            <div className="flex h-[50px] p-4 justify-between items-center w-full border-[0.5px] border-solid border-[#8E8E8E] rounded-[5px]">
+            <div className="flex h-[50px] p-4 justify-between items-center w-full border-[0.5px] border-solid border-[#8E8E8E] rounded-[5px] disabled:true">
               <input
                 className=" flex-1 !outline-none focus:!outline-none h-full text-[14px] text-black font-normal leading-normal font-[Inter]"
                 placeholder="Send a message"
@@ -616,7 +713,9 @@ const PersonalAI = () => {
           </p>
           <div className=" flex flex-col items-center gap-3">
             <div
-              className={`flex justify-center items-center px-4 py-2.5 rounded-[5px] border-[0.5px] border-solid border-[#8E8E8E] w-[354px] gap-2`}
+              className={`justify-center items-center px-4 py-2.5 rounded-[5px] border-[0.5px] border-solid border-[#8E8E8E] w-[354px] gap-2 ${
+                !uploadS ? "flex" : "hidden"
+              }`}
             >
               <GoSearch className=" w-6 h-6 !text-[#8E8E8E]" />
               <input
@@ -646,7 +745,11 @@ const PersonalAI = () => {
               </label>
             </div>
             {Up ? (
-              <div className="p-3 rounded-full border-[0.5px] border-solid border-[#8E8E8E] flex justify-between	items-center py-10 px-4 gap-2">
+              <div
+                className={`p-3 rounded-full border-[0.5px] border-solid border-[#8E8E8E] flex justify-between  items-center py-5 px-5 gap-10  ${
+                  uploadS ? "flex" : "hidden"
+                }`}
+              >
                 <div className="grid grid-rows-3"></div>
                 <div className="ml-[-10px]">
                   <CheckIcon />
@@ -700,7 +803,6 @@ const PersonalAI = () => {
           </Button>
         </div>
       </SModal>
-      <img src={gpxImgurl} />
     </div>
   );
 };
