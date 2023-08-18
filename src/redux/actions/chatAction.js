@@ -27,7 +27,7 @@ export const setchatbot = (dispatch, data) => {
 
 export const getchatbot = (dispatch, data) => {
   axios
-    .post("/api/get_message", data)
+    .post(`${API_URL}/api/get_message`, data)
     .then((res) => {
       if (res.status === 200)
         dispatch({ type: GET_CHATBOT, payload: res.data.data });

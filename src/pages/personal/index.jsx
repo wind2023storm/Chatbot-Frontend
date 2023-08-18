@@ -33,6 +33,8 @@ import SModal from "../../components/modals";
 import { CheckIcon } from "../../components/icons";
 import { data } from "autoprefixer";
 
+const API_URL = 'http://3.142.171.244:5000';
+
 const PersonalAI = () => {
   const dispatch = useDispatch();
   const notification = (type, message) => {
@@ -76,10 +78,10 @@ const PersonalAI = () => {
       const formData = new FormData();
       formData.append("file", gpxfile);
       axios
-        .post("http://localhost:5000/api/upload", formData)
+        .post(`${API_URL}/api/upload`, formData)
         .then((res) => {
           console.log(res.data.data);
-          setgpxImgurl("http://localhost:5000/static/" + res.data.data);
+          setgpxImgurl(`${API_URL}/static/` + res.data.data);
           setUploadOpen(false);
         })
         .catch((err) => {
@@ -111,7 +113,7 @@ const PersonalAI = () => {
     const formData = new FormData();
     formData.append("id", id);
     axios
-      .post("http://localhost:5000/api/deletechat", formData)
+      .post(`${API_URL}/api/deletechat`, formData)
       .then((res) => {
         console.log(res);
         getChatBot();
@@ -126,7 +128,7 @@ const PersonalAI = () => {
     const formData = new FormData();
     formData.append("id", id);
     axios
-      .post("http://localhost:5000/api/editchat", formData)
+      .post(`${API_URL}/api/editchat`, formData)
       .then((res) => {
         console.log(res);
         // getchat();
@@ -139,7 +141,7 @@ const PersonalAI = () => {
     let formData = new FormData();
     formData.append("data", JSON.stringify(chat));
     axios
-      .post("http://localhost:5000/api/addchat", formData)
+      .post(`${API_URL}/api/addchat`, formData)
       .then((res) => {
         if (!res.data.success) {
           notification("error", res.data.message);
@@ -170,7 +172,7 @@ const PersonalAI = () => {
       formData.append("uuid", selectedItem);
       console.log(selectedItem);
       axios
-        .post("http://localhost:5000/api/editchat", formData)
+        .post(`${API_URL}/api/editchat`, formData)
         .then((res) => {
           getchatbot();
         })
@@ -182,19 +184,19 @@ const PersonalAI = () => {
   useEffect(() => {
     if (flag == true) {
       axios
-        .post("http://localhost:5000/api/getchat", chatbotID)
+        .post(`${API_URL}/api/getchat`, chatbotID)
         .then(async (res) => {
           if (res.data.code === 200) {
             getchat(dispatch, res.data.data);
             await axios
-              .post("http://localhost:5000/api/createmessage", res.data.data)
+              .post(`${API_URL}/api/createmessage`, res.data.data)
               .then((res1) => {
                 if (res1.status === 200) {
                   setchatbot(dispatch, res1.data.data);
                   setFlag(false);
                   axios
                     .post(
-                      "http://localhost:5000/api/getmessages",
+                      `${API_URL}/api/getmessages`,
                       res.data.data
                     )
                     .then((res2) => {
@@ -221,7 +223,7 @@ const PersonalAI = () => {
   }, [flag]);
 
   const getChatBot = () => {
-    axios.post("http://localhost:5000/api/getchatbot").then((res) => {
+    axios.post(`${API_URL}/api/getchatbot`).then((res) => {
       setChatbot(res.data.data);
     });
   };
@@ -259,7 +261,7 @@ const PersonalAI = () => {
   const sendMessage = (id, _message) => {
     if (!id || !_message) reutrn;
     axios
-      .post("http://127.0.0.1:5000/api/sendchat", { id, _message })
+      .post(`${API_URL}/api/sendchat`, { id, _message })
       .then((res) => {
         if (!res.data.success) {
           notification("error", res.data.message);
@@ -544,60 +546,60 @@ const PersonalAI = () => {
             <div className={`flex justify-center items-center gap-3`}>
               <Button
                 className={`!flex !px-3.5 !py-2.5 !justify-center !items-center !gap-2.5 !rounded-[99px] !border-[0.5px] !border-solid !font-[Inter] !text-[12px] !font-medium !leading-normal !border-[#8E8E8E] ${
-                  chat.age === "1"
+                  chat.age === "10"
                     ? " !bg-black !text-white"
                     : " !bg-transparent !text-black"
                 }`}
                 onClick={() => {
-                  setChat({ ...chat, age: "1" });
+                  setChat({ ...chat, age: "10" });
                 }}
               >
                 Under 18
               </Button>
               <Button
                 className={`!flex !px-3.5 !py-2.5 !justify-center !items-center !gap-2.5 !rounded-[99px] !border-[0.5px] !border-solid !font-[Inter] !text-[12px] !font-medium !leading-normal !border-[#8E8E8E] ${
-                  chat.age === "2"
+                  chat.age === "20"
                     ? " !bg-black !text-white"
                     : " !bg-transparent !text-black"
                 }`}
                 onClick={() => {
-                  setChat({ ...chat, age: "2" });
+                  setChat({ ...chat, age: "20" });
                 }}
               >
                 18 – 30
               </Button>
               <Button
                 className={`!flex !px-3.5 !py-2.5 !justify-center !items-center !gap-2.5 !rounded-[99px] !border-[0.5px] !border-solid !font-[Inter] !text-[12px] !font-medium !leading-normal !border-[#8E8E8E] ${
-                  chat.age === "3"
+                  chat.age === "30"
                     ? " !bg-black !text-white"
                     : " !bg-transparent !text-black"
                 }`}
                 onClick={() => {
-                  setChat({ ...chat, age: "3" });
+                  setChat({ ...chat, age: "30" });
                 }}
               >
                 31 – 40
               </Button>
               <Button
                 className={`!flex !px-3.5 !py-2.5 !justify-center !items-center !gap-2.5 !rounded-[99px] !border-[0.5px] !border-solid !font-[Inter] !text-[12px] !font-medium !leading-normal !border-[#8E8E8E] ${
-                  chat.age === "4"
+                  chat.age === "40"
                     ? " !bg-black !text-white"
                     : " !bg-transparent !text-black"
                 }`}
                 onClick={() => {
-                  setChat({ ...chat, age: "4" });
+                  setChat({ ...chat, age: "40" });
                 }}
               >
                 41 – 50
               </Button>
               <Button
                 className={`!flex !px-3.5 !py-2.5 !justify-center !items-center !gap-2.5 !rounded-[99px] !border-[0.5px] !border-solid !font-[Inter] !text-[12px] !font-medium !leading-normal !border-[#8E8E8E] ${
-                  chat.age === "5"
+                  chat.age === "50"
                     ? " !bg-black !text-white"
                     : " !bg-transparent !text-black"
                 }`}
                 onClick={() => {
-                  setChat({ ...chat, age: "5" });
+                  setChat({ ...chat, age: "50" });
                 }}
               >
                 Over 50
